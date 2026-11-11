@@ -527,6 +527,8 @@ html.intro-pending.intro-release.intro-fast .site-header::before { transition: a
   mix-blend-mode: screen; opacity: 0; pointer-events: none; will-change: transform;
 }
 
+/* Automatic lite mode (script.js adds it when the intro cannot hold 60 fps): no blend-mode compositing. */
+html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro-vignette { mix-blend-mode: normal; }
 .intro-beam {
   position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
   mix-blend-mode: screen; pointer-events: none;
