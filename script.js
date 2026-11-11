@@ -9,6 +9,20 @@
   });
 })();
 
+// Heavy work (loading and decoding the project pictures) waits until the intro is over, so it cannot make the intro stutter.
+window.__afterIntro = (function () {
+  var root = document.documentElement, queue = [], watching = false;
+  function flush() { var q = queue; queue = []; q.forEach(function (fn) { fn(); }); }
+  return function (fn) {
+    if (!root.classList.contains("intro-pending")) { fn(); return; }
+    queue.push(fn);
+    if (watching) return;
+    watching = true;
+    var mo = new MutationObserver(function () { if (!root.classList.contains("intro-pending")) { mo.disconnect(); flush(); } });
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+  };
+})();
+
 // Renders everything from content.js, then runs the intro (second block below).
 (function () {
   "use strict";
@@ -90,11 +104,11 @@
     li.dataset.id = p.id;
     var fig = el("div", "card-media");
     var img = el("img");
-    img.src = p.image;
     img.alt = p.alt;
     img.width = 800;
     img.height = 500;
-    img.loading = "lazy";
+    img.loading = "lazy"; img.decoding = "async";
+    window.__afterIntro(function () { img.src = p.image; });
     fig.appendChild(img);
     var body = el("div", "card-body");
     body.appendChild(el("p", "card-tag", p.category));
@@ -407,7 +421,8 @@
     b.setAttribute("aria-label", (L.open || "Open") + " " + p.title);
     if (i >= P.length) { b.setAttribute("aria-hidden", "true"); b.tabIndex = -1; }       // repeats are for show only
     var im = document.createElement("img");
-    im.src = p.image; im.alt = ""; im.width = 400; im.height = 400; im.loading = "lazy"; im.draggable = false;
+    im.alt = ""; im.width = 400; im.height = 400; im.loading = "lazy"; im.decoding = "async"; im.draggable = false;
+    window.__afterIntro(function () { im.src = p.image; });
     b.appendChild(im);
     b.addEventListener("click", function () { if (justDragged) return; openProject(p.id); });
     wheel.appendChild(b);
@@ -1029,7 +1044,7 @@
   }
 
   /* ---------- beams: each lit spot throws a beam to the cursor; the beam reveals the dark rig ---------- */
-  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14;
+  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14, beamStep = 1, perfAcc = 0, perfN = 0;
   function mk(tag, attrs, parent) {
     var n = document.createElementNS(NS, tag), k;
     for (k in attrs) n.setAttribute(k, attrs[k]);
@@ -1111,7 +1126,11 @@
       el.setAttribute("visibility", "visible");
     }
     var q;
-    for (q = 0; q < BEAM_LAYERS; q++) poly(b.layers[q], 1.3 * Math.pow(1 - q / BEAM_LAYERS, 1.3) + .05, .08);
+    // beamStep > 1 is the automatic "lite" mode for slow screens: draw every 2nd or 4th layer, each one proportionally stronger.
+    for (q = 0; q < BEAM_LAYERS; q++) {
+      if (q % beamStep) { b.layers[q].setAttribute("visibility", "hidden"); continue; }
+      poly(b.layers[q], 1.3 * Math.pow(1 - q / BEAM_LAYERS, 1.3) + .05, .08 * beamStep);
+    }
     poly(b.m, 1.5, 1); poly(b.m2, 1.5, 1);
     [b.gd, b.mg].forEach(function (gr) {
       gr.setAttribute("x1", sx.toFixed(1)); gr.setAttribute("y1", sy.toFixed(1));
@@ -1381,6 +1400,11 @@
     if (done) return;
     var t = now - start, dt = Math.min(64, now - (prevNow || now - 16));
     prevNow = now; tNow = t;
+    // Adaptive quality: if the beams make frames slow on this device (under about 38 fps), thin the beam layers out.
+    if (anyBeam && beamStep < 4) {
+      perfAcc += dt; perfN++;
+      if (perfN >= 40) { if (perfAcc / perfN > 26) beamStep *= 2; perfAcc = 0; perfN = 0; }
+    } else { perfAcc = 0; perfN = 0; }
     if (!fxOn && t >= 1300) { fxOn = true; fixture.classList.add("fx-on"); }
     if (!lensOn && t >= 3000) { lensOn = true; fixture.classList.add("lens-on"); box.classList.add("armed"); }
     if (!push) {
@@ -1441,9 +1465,15 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!push && !done) measure(); });
 
   enter.disabled = true;      // the button is dead until a beam actually lights it
-  measure();
-  render(0);
-  raf = requestAnimationFrame(function (now) { start = now; tick(now); });
+  var began = false;
+  function begin() {
+    if (began || done) return; began = true;
+    measure();
+    render(0);
+    raf = requestAnimationFrame(function (now) { start = now; tick(now); });
+  }
+  // Start once the web fonts have arrived (or after 1.2 s on a slow connection): a font swap in the middle of the intro re-lays out the page and makes it stutter.
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(begin); setTimeout(begin, 1200); } else begin();
 })();
 
 // Rig faders are for show: touching one pops up "Console locked" for a couple of seconds.
