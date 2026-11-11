@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="gate.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About | Strobe Corp</title>
+  <meta name="description" content="About Strobe Corp: lighting designer, operator and technician.">
+  <meta name="theme-color" content="#050505">
+  <meta name="color-scheme" content="dark">
+  <script>
+    /* Restore the saved gel (accent colour) before first paint. */
+    try { var gel = localStorage.getItem("strobe-gel"); if (gel && /^#[0-9a-f]{6}$/i.test(gel)) document.documentElement.style.setProperty("--accent", gel); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050505'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23ffb347'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="logo" href="index.html" id="logo"></a>
+    <nav aria-label="Main" id="nav"></nav>
+  </header>
+
+  <main id="main" class="about-page" tabindex="-1">
+    <section class="section ap-hero" aria-labelledby="ap-title">
+      <p class="cue" id="ap-eyebrow"></p>
+      <h1 id="ap-title" class="ap-title"></h1>
+      <p class="ap-lead" id="ap-lead"></p>
+    </section>
+
+    <section class="section ap-story" aria-label="My story">
+      <div class="ap-grid">
+        <figure class="ap-portrait"><img id="ap-img" alt="" width="600" height="750"></figure>
+        <div>
+          <div class="prose" id="ap-story"></div>
+          <dl class="stats" id="ap-stats"></dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="ap-do-title">
+      <h2 id="ap-do-title"></h2>
+      <ul class="do-grid" id="ap-do"></ul>
+    </section>
+
+    <section class="section" aria-labelledby="ap-tl-title">
+      <h2 id="ap-tl-title"></h2>
+      <ol class="timeline" id="ap-tl"></ol>
+      <a class="btn" id="ap-cta" href="index.html#contact"></a>
+    </section>
+  </main>
+
+  <footer class="site-footer"><p id="footer-text"></p></footer>
+
+  <noscript><p class="noscript">This page needs JavaScript to show its content.</p></noscript>
+  <script src="content.js"></script>
+  <script src="about.js"></script>
+  <script src="countup.js"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="gate.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
+  <title>Strobe Corp Admin (UI preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050505'/%3E%3Ccircle cx='16' cy='16' r='9' fill='%23ffb347'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <a class="skip" href="#panel-main">Skip to content</a>
+
+  <div class="shell">
+    <!-- ===== Sidebar ===== -->
+    <aside class="side">
+      <div class="brand"><span class="brand-dot" aria-hidden="true"></span><span>Strobe Corp</span><small>Admin</small></div>
+      <nav aria-label="Admin sections" id="adminNav" class="nav">
+        <button type="button" data-panel="projects" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+          <span>Projects</span>
+        </button>
+        <button type="button" data-panel="contact">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <span>Contact &amp; availability</span>
+        </button>
+        <button type="button" data-panel="about">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>About</span>
+        </button>
+        <button type="button" data-panel="rig">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M12 4v16M17 4v16"/><rect x="5" y="14" width="4" height="3" rx="1"/><rect x="10" y="8" width="4" height="3" rx="1"/><rect x="15" y="12" width="4" height="3" rx="1"/></svg>
+          <span>Skills &amp; rig</span>
+        </button>
+        <button type="button" data-panel="gels">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="10" r="5"/><circle cx="15" cy="10" r="5"/><circle cx="12" cy="15" r="5"/></svg>
+          <span>Gel colours</span>
+        </button>
+        <button type="button" data-panel="publish">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+          <span>Publish</span>
+        </button>
+      </nav>
+      <a class="viewsite" href="index.html" target="_blank" rel="noopener">View live site</a>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <div class="main">
+      <header class="topbar">
+        <div class="title">
+          <h1 id="panelTitle">Projects</h1>
+          <p id="panelSub">Add, edit and reorder the work shown on your site.</p>
+        </div>
+        <div class="actions">
+          <span class="pill" id="dirty" hidden><span class="pill-dot" aria-hidden="true"></span>Unsaved changes</span>
+          <button type="button" class="btn ghost" id="discard" disabled>Discard</button>
+          <button type="button" class="btn" id="save" disabled>Save changes</button>
+        </div>
+      </header>
+
+      <p class="banner" role="note"><strong>UI preview.</strong> Nothing is saved yet. Everything you see is filled from <code>content.js</code> so you can judge the layout. Saving, uploads and publishing come next.</p>
+
+      <main id="panel-main" tabindex="-1">
+
+        <!-- Projects -->
+        <section class="panel" id="panel-projects" aria-labelledby="panelTitle">
+          <div class="toolbar">
+            <label class="field inline"><span class="sr-only">Search projects</span>
+              <input type="search" id="pSearch" placeholder="Search projects">
+            </label>
+            <label class="field inline"><span class="sr-only">Category</span>
+              <select id="pCat"><option value="All">All categories</option></select>
+            </label>
+            <span class="count" id="pCount" aria-live="polite"></span>
+            <button type="button" class="btn" id="pAdd">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add project
+            </button>
+          </div>
+          <ul class="plist" id="pList"></ul>
+          <p class="hint">Drag the handle or use the arrows to change the order. The order here is the order on the site.</p>
+        </section>
+
+        <!-- Contact -->
+        <section class="panel" id="panel-contact" hidden>
+          <div class="card-form">
+            <h2>Contact details</h2>
+            <div class="grid2" id="contactFields"></div>
+          </div>
+          <div class="card-form">
+            <h2>Availability</h2>
+            <label class="field"><span>Availability line</span><input type="text" id="cAvail"></label>
+            <p class="hint">Shown in the patch sheet at the bottom of the site.</p>
+          </div>
+          <div class="card-form">
+            <h2>Email button</h2>
+            <div class="grid2">
+              <label class="field"><span>Button label</span><input type="text" id="cBtn"></label>
+              <label class="field"><span>Email subject</span><input type="text" id="cSubject"></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- About -->
+        <section class="panel" id="panel-about" hidden>
+          <div class="card-form">
+            <h2>Headline</h2>
+            <label class="field"><span>Heading</span><input type="text" id="aTitle"></label>
+          </div>
+          <div class="card-form">
+            <h2>Paragraphs</h2>
+            <div id="aParas" class="stack"></div>
+            <button type="button" class="btn ghost" id="aAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add paragraph</button>
+          </div>
+          <div class="card-form">
+            <h2>Numbers</h2>
+            <div id="aStats" class="stack"></div>
+          </div>
+        </section>
+
+        <!-- Skills & rig -->
+        <section class="panel" id="panel-rig" hidden>
+          <div id="rigGroups" class="rig-admin"></div>
+        </section>
+
+        <!-- Gels -->
+        <section class="panel" id="panel-gels" hidden>
+          <div class="card-form">
+            <h2>Accent colours (gels)</h2>
+            <p class="hint">Visitors can switch the site colour between these. The first one is the default.</p>
+            <ul class="gel-list" id="gelList"></ul>
+            <button type="button" class="btn ghost" id="gelAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add colour</button>
+          </div>
+        </section>
+
+        <!-- Publish -->
+        <section class="panel" id="panel-publish" hidden>
+          <div class="card-form status-card">
+            <h2>Connection</h2>
+            <p class="status"><span class="pill-dot off" aria-hidden="true"></span>Not connected to a site folder yet</p>
+            <p class="hint">Once connected, saving writes your changes straight into the site files.</p>
+          </div>
+          <div class="grid2">
+            <div class="card-form">
+              <h2>Export content</h2>
+              <p>Download an updated <code>content.js</code> with all your text and projects.</p>
+              <button type="button" class="btn ghost" disabled>Download content.js</button>
+            </div>
+            <div class="card-form">
+              <h2>Export images</h2>
+              <p>Download the photos you added so you can drop them into the <code>img/</code> folder.</p>
+              <button type="button" class="btn ghost" disabled>Download images</button>
+            </div>
+          </div>
+          <div class="card-form">
+            <h2>Deploy</h2>
+            <ol class="steps">
+              <li>Save your changes here.</li>
+              <li>Upload the site folder to Netlify (drag and drop) or push it to GitHub Pages.</li>
+              <li>Open the live site and check the Work section.</li>
+            </ol>
+            <p class="hint">Full steps are in <code>README.md</code>.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== Project editor (side sheet) ===== -->
+  <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
+    <form method="dialog" class="sheet-form" id="sheetForm">
+      <header class="sheet-head">
+        <h2 id="sheetTitle">Edit project</h2>
+        <button type="button" class="icon-btn" id="sheetClose" aria-label="Close editor">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <div class="field">
+          <span class="label">Photo</span>
+          <label class="drop" id="drop" for="pFile">
+            <img id="dropImg" alt="" width="800" height="500">
+            <span class="drop-msg" id="dropMsg">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5M7 10l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+              <strong>Drop a photo here</strong>
+              <span>or click to choose a file. JPEG or WebP, about 1600x1000 px, under 300 KB.</span>
+            </span>
+            <input type="file" id="pFile" accept="image/*">
+          </label>
+          <label class="field"><span>Photo description (alt text)</span><input type="text" id="pAlt" placeholder="Describe what the photo shows"></label>
+        </div>
+        <label class="field"><span>Title</span><input type="text" id="pTitle"></label>
+        <div class="grid2">
+          <label class="field"><span>Category</span><select id="pCategory"></select></label>
+          <label class="field"><span>Date</span><input type="text" id="pDate" placeholder="Jul 2025"></label>
+        </div>
+        <div class="grid2">
+          <label class="field"><span>Venue or event</span><input type="text" id="pVenue"></label>
+          <label class="field"><span>Your role</span><input type="text" id="pRole"></label>
+        </div>
+        <label class="field"><span>Description</span><textarea id="pBlurb" rows="4"></textarea></label>
+      </div>
+      <footer class="sheet-foot">
+        <button type="button" class="btn danger" id="pDelete">Delete project</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="pCancel">Cancel</button>
+        <button type="button" class="btn" id="pSave">Save project</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="content.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
