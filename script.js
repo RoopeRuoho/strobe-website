@@ -1424,11 +1424,13 @@ window.__afterIntro = (function () {
       tx = live && T ? Math.max(-1, Math.min(1, (T.x - sp.lens.c[0]) / (g.vw * .5))) : 0;
       ty = live && T ? Math.max(-1, Math.min(1, (T.y - sp.lens.c[1]) / (T.y > sp.lens.c[1] ? Math.max(g.vh - sp.lens.c[1], 1) * .8 : g.vh * .5))) : 0;   // bottom of the screen = full downward tilt
       var ak = push && push.blind ? .032 : .08;      // heads turn back to face the visitor slowly while dazzling
-      sp.aim.x += (tx - sp.aim.x) * ak;
-      sp.aim.y += (ty - sp.aim.y) * ak;
+      var ake = 1 - Math.pow(1 - ak, dt / 8.333);    // time-based (tuned at 120 fps), so the heads keep up with the beam when frames are slow
+      sp.aim.x += (tx - sp.aim.x) * ake;
+      sp.aim.y += (ty - sp.aim.y) * ake;
     }
-    drift.x += (nx * Math.min(36, g.vw * .06) - drift.x) * .06;
-    drift.y += (ny * Math.min(26, g.vh * .04) - drift.y) * .06;
+    var dke = 1 - Math.pow(1 - .06, dt / 8.333);
+    drift.x += (nx * Math.min(36, g.vw * .06) - drift.x) * dke;
+    drift.y += (ny * Math.min(26, g.vh * .04) - drift.y) * dke;
 
     flare = push && push.blind ? easeInOut(cl((now - blindT0) / 1700)) : 0;   // the glare rises slowly
     if (push && !released && now >= push.t0) { released = true; root.classList.add("intro-release"); if (window.__heroLive) window.__heroLive("1.15s"); }
