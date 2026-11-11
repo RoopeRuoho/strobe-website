@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="18%" r="75%"><stop offset="0" stop-color="#ffb347" stop-opacity=".9"/><stop offset=".55" stop-color="#7a3b00" stop-opacity=".6"/><stop offset="1" stop-color="#050505"/></radialGradient>
+    <linearGradient id="b" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffb347" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="#050505"/>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <polygon points="380,0 420,0 620,500 180,500" fill="url(#b)" opacity=".5"/>
+  <polygon points="150,0 180,0 120,500 -60,500" fill="url(#b)" opacity=".3"/>
+  <polygon points="620,0 650,0 860,500 680,500" fill="url(#b)" opacity=".3"/>
+</svg>
