@@ -1400,10 +1400,17 @@ window.__afterIntro = (function () {
     if (done) return;
     var t = now - start, dt = Math.min(64, now - (prevNow || now - 16));
     prevNow = now; tNow = t;
-    // Adaptive quality: if the beams make frames slow on this device (under about 38 fps), thin the beam layers out.
-    if (anyBeam && beamStep < 4) {
+    // Adaptive quality, aiming to hold 60 fps: if frames average slower than about 52 fps, step the beams down (20 -> 10 -> 5 -> 3
+    // layers, each stronger) and drop the screen-blend compositing, which is the most expensive part on weak GPUs.
+    if (anyBeam && beamStep < 7) {
       perfAcc += dt; perfN++;
-      if (perfN >= 40) { if (perfAcc / perfN > 26) beamStep *= 2; perfAcc = 0; perfN = 0; }
+      if (perfN >= 30) {
+        if (perfAcc / perfN > 19) {
+          beamStep = beamStep === 1 ? 2 : beamStep === 2 ? 4 : 7;
+          root.classList.add("intro-lite"); bloomG.style.mixBlendMode = "normal";
+        }
+        perfAcc = 0; perfN = 0;
+      }
     } else { perfAcc = 0; perfN = 0; }
     if (!fxOn && t >= 1300) { fxOn = true; fixture.classList.add("fx-on"); }
     if (!lensOn && t >= 3000) { lensOn = true; fixture.classList.add("lens-on"); box.classList.add("armed"); }
