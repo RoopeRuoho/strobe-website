@@ -1059,7 +1059,7 @@ window.__afterIntro = (function () {
   }
 
   /* ---------- beams: each lit spot throws a beam to the cursor; the beam reveals the dark rig ---------- */
-  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14, beamStep = 1, perfAcc = 0, perfN = 0, dtSeen = [];
+  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14, beamStep = 1, perfAcc = 0, perfN = 0, perfGood = 0, floorStep = 1, stepUpAt = 0, dtSeen = [];
   function mk(tag, attrs, parent) {
     var n = document.createElementNS(NS, tag), k;
     for (k in attrs) n.setAttribute(k, attrs[k]);
@@ -1159,7 +1159,7 @@ window.__afterIntro = (function () {
   var g = {};
   var drift = { x: 0, y: 0 }, pointer = null;
   var pool = 0;                       // lens window opening, px of radius
-  var push = null, e = 0, tNow = 0, prevNow = 0, anyBeam = false;
+  var push = null, e = 0, tNow = 0, prevNow = 0, anyBeam = false, nBeams = 0, lastBeams = 0;
   var fxOn = false, lensOn = false, btnOn = false, lastInput = 0, done = false, raf = 0;
   var start = performance.now();
   var lastKey = "";
@@ -1353,14 +1353,14 @@ window.__afterIntro = (function () {
 
     // beams
     var T = target(t), i, s, sp, R;
-    anyBeam = false;
+    anyBeam = false; nBeams = 0;
     for (i = 0; i < 3; i++) {
       sp = SPOTS[i];
       s = (i === 1 ? cl((poolE / g.R - .6) / .4) * (1 - cl(e * 2)) : easeInOut(sp.p) * (1 - cl(e / .06)));
       s *= 1 - cl(flare * 2);                    // the beams swing round to face the visitor: glare replaces them
       if (!T || s <= .01) { hideBeam(beams[i]); continue; }
       R = Math.hypot(sp.lens.e1[0], sp.lens.e1[1]) * (i === 1 ? poolE / g.R : 1);
-      if (i === 1 ? drawBeam(beams[i], mx, my, R, T, s) : drawBeam(beams[i], sp.lens.c[0], sp.lens.c[1], R, T, s)) anyBeam = true;
+      if (i === 1 ? drawBeam(beams[i], mx, my, R, T, s) : drawBeam(beams[i], sp.lens.c[0], sp.lens.c[1], R, T, s)) { anyBeam = true; nBeams++; }
     }
 
     // The enter button lives in the dark. Each part of the box is lit by the beam that actually falls on it, so it
@@ -1447,7 +1447,33 @@ window.__afterIntro = (function () {
     if (done) return;
     var t = now - start, dt = Math.min(64, now - (prevNow || now - 16));
     prevNow = now; tNow = t;
-    // Beams always stay at full quality (no automatic thinning).
+    // Adaptive quality. Under 30 fps (most frames slower than ~33 ms) the beams step down (20 -> 10 -> 5 -> 3 layers, each
+    // stronger) and the screen blend is dropped. When the frame rate is good again (nearly all frames under ~22 ms, i.e. 45+ fps,
+    // held over ~2 s) they step back up. A level that failed right after a step up is not tried again, so it cannot flicker.
+    // Long stalls (>250 ms) and hidden tabs are ignored.
+    // Fewer lights on means less work: when a light is switched off, start again from full quality and let the checks
+    // below step down again only if the device still cannot keep up.
+    if (nBeams < lastBeams && beamStep > 1) {
+      beamStep = 1; floorStep = 1; stepUpAt = 0; perfAcc = 0; perfN = 0; perfGood = 0;
+      root.classList.remove("intro-lite"); bloomG.style.mixBlendMode = "screen";
+    }
+    lastBeams = nBeams;
+    if (anyBeam && !document.hidden && dt < 250) {
+      perfN++; if (dt > 33.4) perfAcc++; if (dt < 22) perfGood++;
+      if (perfN >= 40 && beamStep < 7 && perfAcc > perfN * .6) {
+        if (stepUpAt && tNow - stepUpAt < 6000) floorStep = beamStep === 1 ? 2 : beamStep === 2 ? 4 : 7;
+        beamStep = beamStep === 1 ? 2 : beamStep === 2 ? 4 : 7;
+        root.classList.add("intro-lite"); bloomG.style.mixBlendMode = "normal";
+        perfAcc = 0; perfN = 0; perfGood = 0;
+      } else if (perfN >= 120) {
+        var up = beamStep === 7 ? 4 : beamStep === 4 ? 2 : beamStep === 2 ? 1 : 0;
+        if (up && up >= floorStep && perfGood > perfN * .95) {
+          beamStep = up; stepUpAt = tNow;
+          if (up === 1) { root.classList.remove("intro-lite"); bloomG.style.mixBlendMode = "screen"; }
+        }
+        perfAcc = 0; perfN = 0; perfGood = 0;
+      }
+    } else if (document.hidden || !anyBeam) { perfAcc = 0; perfN = 0; perfGood = 0; }
     if (!fxOn && t >= 1300) { fxOn = true; fixture.classList.add("fx-on"); }
     if (!lensOn && t >= 3000) { lensOn = true; fixture.classList.add("lens-on"); box.classList.add("armed"); }
     if (!push) {
