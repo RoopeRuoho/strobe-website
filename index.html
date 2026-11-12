@@ -39,23 +39,16 @@
 
   <!-- Intro: moving head fixture, beam and pool of light. Hidden unless html.intro-pending. -->
   <div class="intro" id="intro">
-    <svg class="intro-mask" id="introMask" aria-hidden="true" focusable="false">
-      <defs>
-        <radialGradient id="holeGrad">
-          <stop offset="0" stop-color="#000"/><stop offset=".86" stop-color="#000"/><stop offset="1" stop-color="#fff"/>
-        </radialGradient>
-        <mask id="holeMask" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000">
-          <rect x="-3000" y="-3000" width="9000" height="9000" fill="#fff"/>
-          <circle id="hole" r="1" fill="url(#holeGrad)" transform="matrix(.001 0 0 .001 0 0)"/>
-        </mask>
-      </defs>
-      <rect x="-3000" y="-3000" width="9000" height="9000" fill="#050505" mask="url(#holeMask)"/>
-    </svg>
+    <!-- the black screen with its feathered lens window: drawn on a canvas by script.js (an SVG mask here was very slow in Safari) -->
+    <canvas class="intro-mask" id="introMask" aria-hidden="true"></canvas>
     <div class="intro-glow" id="introGlow" aria-hidden="true"></div>
 
     <!-- Line-art rig drawn by script.js: roof truss plus three spot moving heads. Only the centre spot starts lit. -->
     <svg class="fixture" id="fixture" aria-hidden="true" focusable="false">
       <defs id="fxDefs">
+        <radialGradient id="holeGrad">
+          <stop offset="0" stop-color="#000"/><stop offset=".86" stop-color="#000"/><stop offset="1" stop-color="#fff"/>
+        </radialGradient>
         <mask id="holeMaskFx" maskUnits="userSpaceOnUse" x="-3000" y="-3000" width="9000" height="9000">
           <rect x="-3000" y="-3000" width="9000" height="9000" fill="#fff"/>
           <circle id="holeFx" r="1" fill="url(#holeGrad)" transform="matrix(.001 0 0 .001 0 0)"/>

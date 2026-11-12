@@ -713,8 +713,8 @@ window.__afterIntro = (function () {
   window.__introStarted = true;
 
   var $ = function (id) { return document.getElementById(id); };
-  var stage = $("stage"), box = $("intro"), mask = $("introMask"), glow = $("introGlow");
-  var hole = $("hole"), holeFx = $("holeFx"), fixture = $("fixture"), fxG = $("fxG");
+  var stage = $("stage"), box = $("intro"), maskCv = $("introMask"), glow = $("introGlow");
+  var holeFx = $("holeFx"), fixture = $("fixture"), fxG = $("fxG");
   var vignette = $("introVignette"), lastAmb = -1, trussAmb = $("trussAmb"), lensLight = $("lensLight"), fxTruss = $("fxTruss"), maskBeams2 = $("maskBeams2"), fxDark = $("fxDark"), fxDefs = $("fxDefs"), maskBeams = $("maskBeams"), beamSvg = $("introBeam"), beamDefs = $("beamDefs");
   var aim = { x: 0, y: 0 };           // smoothed head aim toward the cursor, -1..1
   var enter = $("introEnter"), skip = $("introSkip"), nav = $("nav");
@@ -1010,11 +1010,26 @@ window.__afterIntro = (function () {
     };
   }
 
+  // Neighbouring plain line paths (no fill) are merged into one element: the picture is identical, but there are about 2.5x fewer
+  // elements to build and paint every frame, which matters a lot in Safari. Filled paths stay separate (they hide the lines behind them).
+  var MERGE = { "": 1, dm: 1, gr: 1 };
+  function mergeRuns(s) {
+    var re = /<path class="([^"]*)" d="([^"]*)"\/>/g, out = "", last = 0, m, cls = null, ds = "";
+    function flush() { if (cls !== null) { out += '<path class="' + cls + '" d="' + ds + '"/>'; cls = null; ds = ""; } }
+    while ((m = re.exec(s))) {
+      out += s.slice(last, m.index) === "" ? "" : (flush(), s.slice(last, m.index));
+      last = re.lastIndex;
+      if (MERGE[m[1]]) { if (cls !== m[1]) { flush(); cls = m[1]; } ds += m[2]; }
+      else { flush(); out += m[0]; }
+    }
+    flush();
+    return out + s.slice(last);
+  }
   function sortJoin(list) {
     list.sort(function (a, b) { return a.d - b.d; });
     var s = "", k;
     for (k = 0; k < list.length; k++) s += list[k].s;
-    return s;
+    return mergeRuns(s);
   }
 
   function drawFixture(t) {
@@ -1044,7 +1059,7 @@ window.__afterIntro = (function () {
   }
 
   /* ---------- beams: each lit spot throws a beam to the cursor; the beam reveals the dark rig ---------- */
-  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14, beamStep = 1, perfAcc = 0, perfN = 0;
+  var NS = "http://www.w3.org/2000/svg", BEAM_LAYERS = 20, BEAM_SEG = 14, beamStep = 1, perfAcc = 0, perfN = 0, dtSeen = [];
   function mk(tag, attrs, parent) {
     var n = document.createElementNS(NS, tag), k;
     for (k in attrs) n.setAttribute(k, attrs[k]);
@@ -1195,6 +1210,37 @@ window.__afterIntro = (function () {
     return { x: g.cx + Math.sin(t / 1500) * g.vw * .34, y: g.cy + g.vh * (.3 + .12 * Math.cos(t / 1100)) };
   }
 
+  // The black screen with the feathered lens window. It is a canvas, not an SVG mask: WebKit (Safari) redrew the whole SVG mask
+  // every frame the lens moved, which was by far the slowest part of the intro. The maths is the same (unit circle mapped by a
+  // matrix, clear in the middle, feathering to black between 86% and 100% of the radius).
+  var maskCtx = maskCv.getContext("2d"), maskGrad = null, maskKey = "", maskW = 0, maskH = 0;
+  function sizeMask(vw, vh) {
+    if (maskCv.width !== vw || maskCv.height !== vh) { maskCv.width = vw; maskCv.height = vh; }
+    maskCv.style.width = vw + "px"; maskCv.style.height = vh + "px";
+    maskW = vw; maskH = vh; maskKey = "";
+  }
+  function drawHole(a, b, c, d, e0, f0) {
+    var key = a.toFixed(2) + "|" + b.toFixed(2) + "|" + c.toFixed(2) + "|" + d.toFixed(2) + "|" + e0.toFixed(1) + "|" + f0.toFixed(1);
+    if (key === maskKey) return;                                   // nothing changed: no redraw
+    maskKey = key;
+    maskCtx.setTransform(1, 0, 0, 1, 0, 0);
+    maskCtx.globalCompositeOperation = "source-over";
+    maskCtx.clearRect(0, 0, maskW, maskH);
+    maskCtx.fillStyle = "#050505";
+    maskCtx.fillRect(0, 0, maskW, maskH);
+    if (Math.hypot(a, b) < .6 && Math.hypot(c, d) < .6) return;    // the window has not opened yet
+    if (!maskGrad) {
+      maskGrad = maskCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      maskGrad.addColorStop(0, "rgba(0,0,0,1)"); maskGrad.addColorStop(.86, "rgba(0,0,0,1)"); maskGrad.addColorStop(1, "rgba(0,0,0,0)");
+    }
+    maskCtx.globalCompositeOperation = "destination-out";
+    maskCtx.setTransform(a, b, c, d, e0, f0);
+    maskCtx.fillStyle = maskGrad;
+    maskCtx.beginPath(); maskCtx.arc(0, 0, 1, 0, Math.PI * 2); maskCtx.fill();
+    maskCtx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  sizeMask(window.innerWidth, window.innerHeight); drawHole(0, 0, 0, 0, 0, 0);      // black from the very first frame
+  sizeMask(window.innerWidth, window.innerHeight); drawHole(0, 0, 0, 0, 0, 0);      // black from the very first frame
   function measure() {
     var vw = window.innerWidth, vh = window.innerHeight;
     stage.style.transform = "none";
@@ -1231,6 +1277,7 @@ window.__afterIntro = (function () {
     stage.style.transformOrigin = g.hx + "px " + g.hy + "px";
     fixture.style.transformOrigin = g.cx + "px " + g.cy + "px";
 
+    sizeMask(vw, vh);
     SPOTS.forEach(function (sp) { sp.cache = null; });
     lastKey = "";   // force a redraw at the new size
   }
@@ -1254,8 +1301,8 @@ window.__afterIntro = (function () {
     var p0 = Math.max(poolE, 1), r = p0 * Math.pow(g.Rend / p0, e), Sx = r / Rcur;
     var mx = lens.c[0], my = lens.c[1];
     // a tilted, elliptical window turns into a circle as the camera arrives
-    hole.setAttribute("transform", "matrix(" + [Sx * (lens.e1[0] * (1 - e) + Rcur * e), Sx * lens.e1[1] * (1 - e),
-      Sx * lens.e2[0] * (1 - e), Sx * (lens.e2[1] * (1 - e) + Rcur * e), mx, my].map(function (v) { return v.toFixed(3); }).join(" ") + ")");
+    drawHole(Sx * (lens.e1[0] * (1 - e) + Rcur * e), Sx * lens.e1[1] * (1 - e),
+      Sx * lens.e2[0] * (1 - e), Sx * (lens.e2[1] * (1 - e) + Rcur * e), mx, my);
     matrix(holeFx, Math.max(w, .001), lens.c);
     matrix(lensLight, Math.max(w * .97, .001), lens.c);
     lensLight.setAttribute("opacity", (cl(w) * (1 - cl(e * 1.6))).toFixed(3));
@@ -1400,18 +1447,7 @@ window.__afterIntro = (function () {
     if (done) return;
     var t = now - start, dt = Math.min(64, now - (prevNow || now - 16));
     prevNow = now; tNow = t;
-    // Adaptive quality, aiming to hold 60 fps: if frames average slower than about 52 fps, step the beams down (20 -> 10 -> 5 -> 3
-    // layers, each stronger) and drop the screen-blend compositing, which is the most expensive part on weak GPUs.
-    if (anyBeam && beamStep < 7) {
-      perfAcc += dt; perfN++;
-      if (perfN >= 30) {
-        if (perfAcc / perfN > 19) {
-          beamStep = beamStep === 1 ? 2 : beamStep === 2 ? 4 : 7;
-          root.classList.add("intro-lite"); bloomG.style.mixBlendMode = "normal";
-        }
-        perfAcc = 0; perfN = 0;
-      }
-    } else { perfAcc = 0; perfN = 0; }
+    // Beams always stay at full quality (no automatic thinning).
     if (!fxOn && t >= 1300) { fxOn = true; fixture.classList.add("fx-on"); }
     if (!lensOn && t >= 3000) { lensOn = true; fixture.classList.add("lens-on"); box.classList.add("armed"); }
     if (!push) {
@@ -1506,4 +1542,40 @@ window.__afterIntro = (function () {
   function hide() { clearTimeout(timer); pop.classList.remove("show"); }
   window.addEventListener("scroll", function () { if (pop.classList.contains("show")) hide(); }, { passive: true });   // scrolling dismisses it
   window.addEventListener("wheel", function () { if (pop.classList.contains("show")) hide(); }, { passive: true });
+})();
+
+// TEMP: Safari / slow-device diagnostic panel. Open index.html?diag=1 to get an fps counter and switches for the heavy parts of the
+// intro, so we can see which one is slow on a given browser. Remove this block (and the ?diag use) before launch.
+(function () {
+  "use strict";
+  if (!/[?&]diag\b/.test(location.search)) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var panel = document.createElement("div");
+  panel.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:2147483600;background:rgba(0,0,0,.85);color:#fff;font:12px/1.5 -apple-system,system-ui,sans-serif;padding:8px 10px;border:1px solid #555;border-radius:4px;max-width:260px";
+  var fps = document.createElement("div"); fps.style.cssText = "font-weight:700;margin-bottom:4px"; fps.textContent = "fps ...";
+  panel.appendChild(fps);
+  function sw(label, off, on) {
+    var l = document.createElement("label"); l.style.cssText = "display:block;cursor:pointer";
+    var c = document.createElement("input"); c.type = "checkbox"; c.checked = true; c.style.marginRight = "6px";
+    c.addEventListener("change", function () { c.checked ? on() : off(); });
+    l.appendChild(c); l.appendChild(document.createTextNode(label)); panel.appendChild(l);
+  }
+  function el(id) { return $(id); }
+  var blendEls = ["introBeam", "introVignette", "introGlow"];
+  sw("Dark + truss reveal masks", function () { el("fxDark").removeAttribute("mask"); el("fxTruss").removeAttribute("mask"); }, function () { el("fxDark").setAttribute("mask", "url(#darkMask)"); el("fxTruss").setAttribute("mask", "url(#trussMask)"); });
+  sw("Lit-spot lens mask", function () { el("fxG").removeAttribute("mask"); }, function () { el("fxG").setAttribute("mask", "url(#holeMaskFx)"); });
+  sw("Black screen + lens window", function () { el("introMask").style.display = "none"; }, function () { el("introMask").style.display = ""; });
+  sw("Blend modes (screen)", function () { blendEls.forEach(function (i) { el(i).style.mixBlendMode = "normal"; }); }, function () { blendEls.forEach(function (i) { el(i).style.mixBlendMode = ""; }); });
+  sw("Beams + lens lights", function () { el("introBeam").style.display = "none"; }, function () { el("introBeam").style.display = ""; });
+  sw("Edge glow", function () { el("introVignette").style.display = "none"; }, function () { el("introVignette").style.display = ""; });
+  sw("Fixture drawings", function () { el("fixture").style.display = "none"; }, function () { el("fixture").style.display = ""; });
+  var hint = document.createElement("div"); hint.style.cssText = "margin-top:4px;color:#aaa"; hint.textContent = "Move the mouse around, untick one box at a time, watch fps.";
+  panel.appendChild(hint);
+  document.body.appendChild(panel);
+  var frames = 0, t0 = performance.now(), worst = 0, last = t0;
+  (function loop(n) {
+    frames++; worst = Math.max(worst, n - last); last = n;
+    if (n - t0 >= 1000) { fps.textContent = Math.round(frames * 1000 / (n - t0)) + " fps (worst frame " + Math.round(worst) + " ms)"; frames = 0; worst = 0; t0 = n; }
+    requestAnimationFrame(loop);
+  })(performance.now());
 })();
