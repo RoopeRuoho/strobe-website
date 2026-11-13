@@ -622,3 +622,43 @@ html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro
 .gobo-disc.is-on::after { opacity: calc(.8 * var(--g, 1)); }
 
 .gobo-dust { position: absolute; left: 0; bottom: 0; width: 100%; height: 170px; z-index: 2; pointer-events: none; mix-blend-mode: screen; }
+
+/* ---------- Stats as timecode clocks: lit seven-segment digits on a dark bezel ---------- */
+.stat-value.tc {
+  display: inline-flex; align-items: center; gap: .32em; align-self: flex-start; width: fit-content; max-width: 100%;
+  padding: .55em .8em; margin-top: var(--s2);
+  background: linear-gradient(180deg, #08080a, #040405); border: 1px solid var(--line-2); border-radius: 4px;
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .03), 0 1px 0 rgba(255, 255, 255, .04);
+  font-size: clamp(34px, 6.4vw, 52px);
+  transform: skewX(-6deg); transform-origin: left center;           /* LED clocks are slightly slanted */
+  filter: drop-shadow(0 0 6px rgba(56, 255, 124, .6));
+}
+.tc-d, .tc-p { display: block; height: 1em; width: auto; flex: none; overflow: visible; }
+.tc-d { width: .578em; }
+.tc-p { width: .385em; }
+.tc-d .on, .tc-p .on { fill: #38ff7c; }                           /* LED green */
+.tc-d .off { fill: #38ff7c; opacity: .07; }
+
+/* Triple click: the clocks go nuts (shake and cycle colour; the numbers are driven by countup.js at about 13 changes a second) */
+.stat-value.tc.tc-nuts { animation: tcShake .16s linear infinite, tcFlash .6s steps(1, end) infinite; }
+.tc-nuts .tc-d .on, .tc-nuts .tc-p .on, .tc-nuts .tc-d .off { fill: currentColor; }
+@keyframes tcShake {
+  0% { transform: skewX(-6deg) translate(0, 0) rotate(0); }
+  25% { transform: skewX(-6deg) translate(-2px, 1px) rotate(-.7deg); }
+  50% { transform: skewX(-6deg) translate(1px, -2px) rotate(.5deg); }
+  75% { transform: skewX(-6deg) translate(2px, 1px) rotate(-.4deg); }
+  100% { transform: skewX(-6deg) translate(0, 0) rotate(0); }
+}
+@keyframes tcFlash {   /* yellow, then red (under 2 flashes a second) */
+  0% { color: #ffd60a; filter: drop-shadow(0 0 9px rgba(255, 214, 10, .85)); }
+  50% { color: #ff2b2b; filter: drop-shadow(0 0 9px rgba(255, 43, 43, .85)); }
+}
+
+/* the colons of the timecode that the three clocks make together while they go nuts */
+.tc-c { display: flex; flex-direction: column; justify-content: center; gap: .22em; width: .2em; flex: none; align-self: stretch; }
+.tc-c i { display: block; width: .12em; height: .12em; margin: 0 auto; border-radius: 50%; background: currentColor; }
+
+/* the angry red 8-bit faces at the end of the nuts */
+.tc-f { display: block; height: 1.14em; width: 1.14em; margin: -.07em 0; flex: none; transform: scale(1.4); }   /* bigger, but still inside the bezel */
+.stat-value.tc.tc-sad { justify-content: center; color: #ff2b2b; filter: drop-shadow(0 0 9px rgba(255, 43, 43, .9)); animation: tcShake .11s linear infinite; }   /* trembling with rage */
+.tc-sad .tc-f rect { fill: #ff2b2b; }
