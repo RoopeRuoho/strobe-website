@@ -402,7 +402,7 @@ window.__afterIntro = (function () {
   var P = S.work.projects, L = S.work.gobo || {};
   var screen = document.getElementById("goboScreen"), layers = [document.getElementById("goboLayerA"), document.getElementById("goboLayerB")];
   var beamEl = document.getElementById("goboBeam"), layerOn = 0, shownId = null, activeProj = P[0];
-  var bg = 1, bgPrev = 1, bu0 = 0, bu1 = 1, beamCols = null, BEAM_H = 170, beamDw = 110, beamTimer = 0, posterImg = null, lastBest = 0, angPrev = 0, dirNow = 1;
+  var dustDpr = 1, hole = { x: 0, y: 0, r: 0 }, holeDrawn = { x: 1e9, y: 0, r: 0 }, bg = 1, bgPrev = 1, bu0 = 0, bu1 = 1, beamCols = null, BEAM_H = 170, beamDw = 110, beamTimer = 0, posterImg = null, lastBest = 0, angPrev = 0, dirNow = 1;
   var sCv = document.createElement("canvas"); sCv.width = 48; sCv.height = 27;
   var sCtx = sCv.getContext("2d", { willReadFrequently: true });
   if (L.aspect) screen.style.setProperty("--aspect", L.aspect);
@@ -452,7 +452,10 @@ window.__afterIntro = (function () {
     box.style.setProperty("--ov", Math.round(dsz * .85 + 14) + "px");   // the haze beam reaches down to the active disc
     beamDw = dsz * 1.15;                                            // the beam leaves the lens: as wide as the gobo
     var bw = Math.max(200, Math.round(screen.getBoundingClientRect().width || stage.clientWidth * .64)), dpr = Math.min(1.5, window.devicePixelRatio || 1);
-    beamEl.width = Math.round(bw * dpr); beamEl.height = Math.round(BEAM_H * dpr);
+    // The beam is drawn at 0.4 of its size and scaled up smoothly by the browser: that is its softness. (A CSS blur filter on this canvas
+    // was shown at the wrong place by some browsers, which left a dark gap beside the disc.)
+    beamEl.width = Math.max(40, Math.round(bw * .4)); beamEl.height = Math.max(20, Math.round(BEAM_H * .4));
+    dustDpr = dpr;
     beamEl.style.height = BEAM_H + "px";
     paintBeam();
     discs.forEach(function (d, i) {
@@ -481,16 +484,26 @@ window.__afterIntro = (function () {
     var spacing = step * Math.PI / 180 * R, apr = Math.min(.9 * dsz, Math.max(.25 * dsz, .8 * (spacing - dsz)));
     var off = bSigned * Math.PI / 180 * R, lo = Math.max(-apr / 2, off - dsz / 2), hi = Math.min(apr / 2, off + dsz / 2), u0 = .5, u1 = .5;
     if (hi > lo) { u0 = (lo + apr / 2) / apr; u1 = (hi + apr / 2) / apr; }
+    // A lens turns the picture round: the picture is mirrored left to right relative to the gobo. So the plate edge that leaves with the
+    // wheel pushes the light to black from the side the wheel is heading to, and the picture slides the opposite way to the wheel.
+    var uT = u0; u0 = 1 - u1; u1 = 1 - uT;
     var gw = Math.min(1, Math.max(0, (u1 - u0 - .04) / .16)); bg = gw * gw * (3 - 2 * gw);   // a sliver of light between two gobos is shut off completely
     box.style.setProperty("--g", bg.toFixed(3));
-    box.style.setProperty("--sh", (off / spacing * .3 * (screen.clientWidth || 600)).toFixed(1) + "px");   // the picture travels with the wheel, continuously
+    box.style.setProperty("--sh", (-off / spacing * .3 * (screen.clientWidth || 600)).toFixed(1) + "px");   // the picture travels with the wheel, continuously
     beamDw = apr;                                                    // rays start at the lit window, the same width as the aperture
     var F = .1, m0 = u0 - F * (1 - u0), m1 = u1 - F * (1 - u1);   // soft feather on the pushing edge (none when fully open)
     box.style.setProperty("--m0", (m0 * 100).toFixed(2) + "%");
     box.style.setProperty("--m0e", ((m0 + F) * 100).toFixed(2) + "%");
     box.style.setProperty("--m1", (m1 * 100).toFixed(2) + "%");
     box.style.setProperty("--m1e", ((m1 + F) * 100).toFixed(2) + "%");
-    if (Math.abs(u0 - bu0) > .003 || Math.abs(u1 - bu1) > .003 || Math.abs(bg - bgPrev) > .01) { bu0 = u0; bu1 = u1; bgPrev = bg; renderBeam(); }
+    // The lamp is behind the wheel: the beam is only visible beyond the disc that is lined up with it. The disc's outline (its real
+    // position, size and ring) is cut out of the beam, so the light seems to come from behind the disc and out past its top edge.
+    var nearB = Math.max(0, 1 - best / (step * 1.1)), hx = off, hy = R * (1 - Math.cos(bSigned * Math.PI / 180)), hr = dsz / 2 * (1 + .28 * nearB * nearB);
+    // Compared with what was DRAWN last (not with the previous frame: at a slow turn the disc moves a fraction of a pixel per frame, so a
+    // frame-to-frame check never fires and the beam would be left behind, then jump).
+    var holeMoved = Math.abs(hx - holeDrawn.x) > .3 || Math.abs(hy - holeDrawn.y) > .3 || Math.abs(hr - holeDrawn.r) > .3;
+    hole.x = hx; hole.y = hy; hole.r = hr;
+    if (holeMoved || Math.abs(u0 - bu0) > .003 || Math.abs(u1 - bu1) > .003 || Math.abs(bg - bgPrev) > .01) { bu0 = u0; bu1 = u1; bgPrev = bg; holeDrawn.x = hx; holeDrawn.y = hy; holeDrawn.r = hr; renderBeam(); }
     box.style.setProperty("--open", Math.max(0, u1 - u0).toFixed(3));
     if (bi !== activeI) {
       if (activeI >= 0) discs[activeI].classList.remove("is-on");
@@ -525,29 +538,143 @@ window.__afterIntro = (function () {
     }
     beamCols = cols; renderBeam();
   }
+  // The beam is a cone of lit haze. Its picture is a 1 x N strip of colour (one pixel per column of the screen image). Every row of
+  // the cone is that strip stretched across the width of the cone at that height, so colour blends smoothly between columns instead
+  // of showing 48 hard-edged bars. Near the lamp the strip is sharp; further away it is a blurred copy, because haze scatters the
+  // pattern as the light travels. Brightness falls off with distance from the lamp, and the sides of the cone are soft.
+  // Four strips: sharp and scattered, each with the plate window applied (what reaches the screen) and without it (the light right at
+  // the lamp, which is lit all over the gobo). A row blends between the two, so the cone is whole at the disc and is shaped by the
+  // moving plate edge only further out. That keeps the beam glued to the disc while the wheel turns.
+  var stripA = document.createElement("canvas"), stripB = document.createElement("canvas"), stripC = document.createElement("canvas"), stripD = document.createElement("canvas");
+  stripA.width = stripB.width = stripC.width = stripD.width = 48; stripA.height = stripB.height = stripC.height = stripD.height = 1;
+  var glowCol = [255, 190, 80, 0], hazeCv = document.createElement("canvas");
+  function ss(x) { x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * (3 - 2 * x); }
+  function buildStrips() {
+    var N = 48, i, cols = beamCols, F2 = .1, A = stripA.getContext("2d").createImageData(N, 1);
+    var full = Math.min(1, .35 + .65 * Math.max(0, bu1 - bu0));       // the whole cone gets dimmer as the plate covers more of the lamp
+    function makeP(useWin) {
+      var P = [];
+      for (i = 0; i < N; i++) {
+        var c = cols ? cols[i] : null, lum = c ? (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255 : .5;
+        var rr = c ? Math.min(255, c[0] * 1.6 + 24) : 255, gg = c ? Math.min(255, c[1] * 1.6 + 24) : 190, bb = c ? Math.min(255, c[2] * 1.6 + 24) : 80;
+        var cc = (i + .5) / N, wl = useWin ? ss((cc - bu0) / F2 + .5) : 1, wr = useWin ? ss((bu1 - cc) / F2 + .5) : 1;
+        var edge = ss(cc / .07) * ss((1 - cc) / .07);                  // the sides of the cone are soft
+        var a = Math.min(1, .16 + .8 * Math.pow(lum, .7)) * wl * wr * bg * edge * (useWin ? 1 : full);
+        P.push([rr * a, gg * a, bb * a, a]);                           // premultiplied, so it can be blurred without dark fringes
+      }
+      return P;
+    }
+    function blurOf(P) {
+      var out = [], k, n, j, q;
+      for (i = 0; i < N; i++) {
+        var t = [0, 0, 0, 0]; n = 0;
+        for (j = -4; j <= 4; j++) { k = i + j; if (k < 0 || k >= N) continue; var wgt = 1 - Math.abs(j) / 5; for (q = 0; q < 4; q++) t[q] += P[k][q] * wgt; n += wgt; }
+        out.push([t[0] / n, t[1] / n, t[2] / n, t[3] / n]);
+      }
+      return out;
+    }
+    function put(cv, arr) {
+      var d = A.data;
+      for (var x = 0; x < N; x++) { var p = arr[x], al = p[3]; d[x * 4] = al > .001 ? Math.min(255, p[0] / al) : 0; d[x * 4 + 1] = al > .001 ? Math.min(255, p[1] / al) : 0; d[x * 4 + 2] = al > .001 ? Math.min(255, p[2] / al) : 0; d[x * 4 + 3] = Math.min(255, al * 255); }
+      cv.getContext("2d").putImageData(A, 0, 0);
+    }
+    var PW = makeP(true), PF = makeP(false), sa = 0, sr = 0, sg = 0, sb = 0;
+    for (i = 0; i < N; i++) { sr += PW[i][0]; sg += PW[i][1]; sb += PW[i][2]; sa += PW[i][3]; }
+    glowCol = sa > .001 ? [sr / sa, sg / sa, sb / sa, Math.min(1, sa / N * 1.7)] : [255, 190, 80, 0];   // average colour and strength of the lit window
+    put(stripA, PW); put(stripB, blurOf(PW)); put(stripC, PF); put(stripD, blurOf(PF));
+  }
   function renderBeam() {
-    var ctx = beamEl.getContext("2d"), W2 = beamEl.width, H2 = beamEl.height, N = 48, i, cols = beamCols;
+    var ctx = beamEl.getContext("2d"), W2 = beamEl.width, H2 = beamEl.height;
     if (!ctx || !W2) return;
     ctx.clearRect(0, 0, W2, H2);
-    ctx.globalCompositeOperation = "lighter";
-    var acc = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffb347";
-    var scale = W2 / (beamEl.clientWidth || W2), apex = beamDw * scale, cx = W2 / 2;
-    for (i = 0; i < N; i++) {
-      var c = cols ? cols[i] : null, lum = c ? (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255 : .5;
-      var rr = c ? Math.min(255, c[0] * 1.6 + 24) : 255, gg = c ? Math.min(255, c[1] * 1.6 + 24) : 190, bb = c ? Math.min(255, c[2] * 1.6 + 24) : 80;
-      var cc = (i + .5) / N, F2 = .1, wl = Math.min(1, Math.max(0, (cc - bu0) / F2 + .5)), wr = Math.min(1, Math.max(0, (bu1 - cc) / F2 + .5));
-      var wgt = wl * wl * (3 - 2 * wl) * wr * wr * (3 - 2 * wr) * bg;       // each ray fades with the same soft edge as the picture
-      if (wgt < .004) continue;
-      var a = Math.min(1, (.16 + .8 * Math.pow(lum, .7))) * wgt;
-      var tx0 = W2 * i / N, tx1 = W2 * (i + 1) / N, bx0 = cx - apex / 2 + apex * i / N, bx1 = cx - apex / 2 + apex * (i + 1) / N;
-      var gr = ctx.createLinearGradient(0, H2, 0, 0);
-      gr.addColorStop(0, "rgba(" + (rr | 0) + "," + (gg | 0) + "," + (bb | 0) + "," + (a * 1.32).toFixed(3) + ")");
-      gr.addColorStop(.6, "rgba(" + (rr | 0) + "," + (gg | 0) + "," + (bb | 0) + "," + (a * .66).toFixed(3) + ")");
-      gr.addColorStop(1, "rgba(" + (rr | 0) + "," + (gg | 0) + "," + (bb | 0) + "," + (a * .384).toFixed(3) + ")");
-      ctx.fillStyle = gr;
-      ctx.beginPath(); ctx.moveTo(bx0, H2); ctx.lineTo(bx1, H2); ctx.lineTo(tx1 + 1, 0); ctx.lineTo(tx0 - 1, 0); ctx.closePath(); ctx.fill();
+    var scale = W2 / (beamEl.clientWidth || W2), apex = Math.max(beamDw, hole.r * 1.6) * scale, cx = W2 / 2, cxa = cx + hole.x * scale, ROW = Math.max(1, Math.round(2 * scale)), y;
+    if (bg > .004 && bu1 > bu0) {
+      buildStrips();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.imageSmoothingEnabled = true;
+      for (y = 0; y < H2; y += ROW) {
+        var sN = (y + ROW / 2) / H2;                               // 0 at the screen, 1 at the lamp
+        var left = sN * (cxa - apex / 2), right = (1 - sN) * W2 + sN * (cxa + apex / 2);
+        var al = 1.45 * (.5 + .95 * Math.pow(sN, 1.2));                // falls off with distance from the lamp (a pass can be at most 1, so strong rows draw twice)
+        var sharp = ss(sN * 1.35);                                     // sharp near the lamp, scattered far away
+        var wW = 1, wF = 0;                                             // the beam is only where the screen is lit: it takes the shape of the plate window along its whole length
+        var rw = right - left;
+        for (var pass = 0; pass < 2 && al > 0; pass++, al -= 1) {
+          var pa = Math.min(1, al);
+          if (wW * sharp > .01) { ctx.globalAlpha = pa * sharp * wW; ctx.drawImage(stripA, 0, 0, 48, 1, left, y, rw, ROW); }
+          if (wW * (1 - sharp) > .01) { ctx.globalAlpha = pa * (1 - sharp) * wW; ctx.drawImage(stripB, 0, 0, 48, 1, left, y, rw, ROW); }
+          if (wF * sharp > .01) { ctx.globalAlpha = pa * sharp * wF; ctx.drawImage(stripC, 0, 0, 48, 1, left, y, rw, ROW); }
+          if (wF * (1 - sharp) > .01) { ctx.globalAlpha = pa * (1 - sharp) * wF; ctx.drawImage(stripD, 0, 0, 48, 1, left, y, rw, ROW); }
+        }
+      }
+      ctx.globalAlpha = 1;
     }
+    // The air right around the lamp is lit too (haze scatters light in every direction), so no black gap is left between the disc and the cone.
+    if (bg > .004 && bu1 > bu0 && glowCol[3] > .01) {
+      var hz = hazeCv, hc, gx = cx + hole.x * scale, gy = H2 + hole.y * scale, gr = hole.r * 1.75 * scale;
+      if (hz.width !== W2 || hz.height !== H2) { hz.width = W2; hz.height = H2; }
+      hc = hz.getContext("2d"); hc.globalCompositeOperation = "source-over"; hc.clearRect(0, 0, W2, H2);
+      var rg = hc.createRadialGradient(gx, gy, hole.r * .8 * scale, gx, gy, gr), rgb = (glowCol[0] | 0) + "," + (glowCol[1] | 0) + "," + (glowCol[2] | 0), ga = glowCol[3] * bg * Math.pow(Math.max(0, bu1 - bu0), 2);
+      rg.addColorStop(0, "rgba(" + rgb + "," + (.5 * ga).toFixed(3) + ")"); rg.addColorStop(.4, "rgba(" + rgb + "," + (.22 * ga).toFixed(3) + ")"); rg.addColorStop(1, "rgba(" + rgb + ",0)");
+      hc.fillStyle = rg; hc.fillRect(0, 0, W2, H2);
+      hc.globalCompositeOperation = "destination-in";                  // it fades out towards the lower edge, where the wheel's plate takes over
+      var vg = hc.createLinearGradient(0, 0, 0, H2); vg.addColorStop(0, "rgba(0,0,0,1)"); vg.addColorStop(.7, "rgba(0,0,0,1)"); vg.addColorStop(1, "rgba(0,0,0,0)");
+      hc.fillStyle = vg; hc.fillRect(0, 0, W2, H2);
+      ctx.globalCompositeOperation = "lighter"; ctx.drawImage(hz, 0, 0);
+    }
+    ctx.globalCompositeOperation = "destination-out";                 // the disc is in front of the lamp: nothing shines over it
+    ctx.fillStyle = "#000";
+    var hx = cx + hole.x * scale, hy = H2 + hole.y * scale, hg = ctx.createRadialGradient(hx, hy, Math.max(0, hole.r - 9) * scale, hx, hy, (hole.r - 1) * scale);
+    hg.addColorStop(0, "rgba(0,0,0,1)"); hg.addColorStop(1, "rgba(0,0,0,0)");   // the light wraps over the dark ring a little: no black gap round the glass
+    ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.arc(hx, hy, (hole.r - 1) * scale, 0, 6.2832); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
   }
+
+  // Dust and haze particles drifting through the beam: they are only visible where the light is, and they make the cone read as air.
+  var dustEl = document.createElement("canvas"), dust = [], dustT = 0, dustRaf = 0;
+  dustEl.className = "gobo-dust"; dustEl.setAttribute("aria-hidden", "true");
+  beamEl.parentNode.appendChild(dustEl);
+  // The motes hang in the air (they have a fixed place in the room): the cone of light sweeps over them as the wheel turns, so they
+  // light up and go dark instead of travelling with the beam.
+  for (var di = 0; di < 46; di++) dust.push({ x: Math.random(), s: Math.random(), v: .014 + Math.random() * .03, r: .5 + Math.random() * 1.1, ph: Math.random() * 6.28, sw: .004 + Math.random() * .012, tw: .6 + Math.random() * 1.4 });
+  function dustFrame(now) {
+    dustRaf = 0;
+    if (!visible || document.hidden) return;
+    var W2 = Math.max(40, Math.round((beamEl.clientWidth || 300) * dustDpr)), H2 = Math.max(20, Math.round(BEAM_H * dustDpr));
+    if (dustEl.width !== W2) dustEl.width = W2;
+    if (dustEl.height !== H2) dustEl.height = H2;
+    var ctx = dustEl.getContext("2d");
+    ctx.clearRect(0, 0, W2, H2);
+    var dt = Math.min(.1, (now - (dustT || now)) / 1000); dustT = now;
+    if (bg > .02 && bu1 > bu0) {
+      var scale = W2 / (beamEl.clientWidth || W2), apex = Math.max(beamDw, hole.r * 1.6) * scale, cx = W2 / 2, cxa = cx + hole.x * scale, F2 = .1;
+      ctx.globalCompositeOperation = "lighter";
+      for (var i = 0; i < dust.length; i++) {
+        var p = dust[i];
+        p.s -= p.v * dt;                                               // a slow draught carries the motes up towards the screen
+        if (p.s < 0) { p.s = 1; p.x = Math.random(); }
+        var px = (p.x + Math.sin(now / 1000 * p.tw + p.ph) * p.sw) * W2, py = p.s * H2;
+        var left = p.s * (cxa - apex / 2), right = (1 - p.s) * W2 + p.s * (cxa + apex / 2), xn = (px - left) / (right - left);
+        if (xn < 0 || xn > 1) continue;                                // outside the cone of light: not lit
+        var dx = px - cxa, dy = py - (H2 + hole.y * scale);
+        if (dx * dx + dy * dy < (hole.r * scale) * (hole.r * scale)) continue;
+        var wl = ss((xn - bu0) / F2 + .5), wr = ss((bu1 - xn) / F2 + .5), wm = (wl * wr) * ss(xn / .07) * ss((1 - xn) / .07);
+        var ci = Math.max(0, Math.min(47, Math.floor(xn * 48))), c = beamCols ? beamCols[ci] : null;
+        var rr = c ? Math.min(255, c[0] * 1.4 + 70) : 255, gg = c ? Math.min(255, c[1] * 1.4 + 70) : 215, bb = c ? Math.min(255, c[2] * 1.4 + 70) : 150;
+        var tw = .55 + .45 * Math.sin(now / 1000 * p.tw * 2.1 + p.ph * 1.7);
+        var a = wm * bg * tw * ss(p.s * 6) * ss((1 - p.s) * 8) * (.3 + .5 * (1 - p.s));
+        if (a < .01) continue;
+        ctx.fillStyle = "rgba(" + (rr | 0) + "," + (gg | 0) + "," + (bb | 0) + "," + Math.min(.8, a).toFixed(3) + ")";
+        ctx.beginPath(); ctx.arc(px, py, p.r * scale, 0, 6.2832); ctx.fill();
+      }
+    }
+    dustRaf = requestAnimationFrame(dustFrame);
+  }
+  function startDust() { if (!dustRaf && !reduce) { dustT = 0; dustRaf = requestAnimationFrame(dustFrame); } }
+  document.addEventListener("visibilitychange", startDust);
+  setInterval(startDust, 1000);                                        // cheap safety net: restarts after the wheel scrolls back into view
+
   function beamLoop() {                                              // videos change every frame: repaint a few times a second
     beamTimer = 0;
     var m = layers[layerOn].firstChild;
