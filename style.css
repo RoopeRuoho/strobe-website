@@ -24,6 +24,7 @@
 html { overflow-x: clip; overscroll-behavior-y: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-gutter: stable; scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 16px); }
 body {
   margin: 0;
+  overflow-x: clip;   /* the glow behind the hero is wider than the screen: it must never make the page wider (phones zoom out to fit it) */
   background: var(--bg);
   color: var(--text);
   font: 400 1rem/1.6 var(--font-body);
@@ -662,3 +663,13 @@ html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro
 .tc-f { display: block; height: 1.14em; width: 1.14em; margin: -.07em 0; flex: none; transform: scale(1.4); }   /* bigger, but still inside the bezel */
 .stat-value.tc.tc-sad { justify-content: center; color: #ff2b2b; filter: drop-shadow(0 0 9px rgba(255, 43, 43, .9)); animation: tcShake .11s linear infinite; }   /* trembling with rage */
 .tc-sad .tc-f rect { fill: #ff2b2b; }
+
+/* Easter eggs on touch screens: no double-tap zoom or text selection when tapping the clocks or the wheel buttons three times in a row */
+.stat-value.tc, .gobo-btn, .gobo-bar button, .fader, .gate-lamp { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.stat-value.tc { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: default; }
+
+/* Phones: the three clocks sit one under the other (three across would run off the screen) */
+@media (max-width: 599px) {
+  .stats { grid-template-columns: 1fr; }
+  .stat-value.tc { font-size: 40px; }
+}
