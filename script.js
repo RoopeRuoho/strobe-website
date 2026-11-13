@@ -611,10 +611,10 @@ window.__afterIntro = (function () {
     }
     // The air right around the lamp is lit too (haze scatters light in every direction), so no black gap is left between the disc and the cone.
     if (bg > .004 && bu1 > bu0 && glowCol[3] > .01) {
-      var hz = hazeCv, hc, gx = cx + hole.x * scale, gy = H2 + hole.y * scale, gr = hole.r * 1.75 * scale;
+      var hz = hazeCv, hc, gx = cx + hole.x * scale, gy = H2 + hole.y * scale, gr = Math.max(1, hole.r * 1.75 * scale);
       if (hz.width !== W2 || hz.height !== H2) { hz.width = W2; hz.height = H2; }
       hc = hz.getContext("2d"); hc.globalCompositeOperation = "source-over"; hc.clearRect(0, 0, W2, H2);
-      var rg = hc.createRadialGradient(gx, gy, hole.r * .8 * scale, gx, gy, gr), rgb = (glowCol[0] | 0) + "," + (glowCol[1] | 0) + "," + (glowCol[2] | 0), ga = glowCol[3] * bg * Math.pow(Math.max(0, bu1 - bu0), 2);
+      var rg = hc.createRadialGradient(gx, gy, Math.min(hole.r * .8 * scale, gr - .5), gx, gy, gr), rgb = (glowCol[0] | 0) + "," + (glowCol[1] | 0) + "," + (glowCol[2] | 0), ga = glowCol[3] * bg * Math.pow(Math.max(0, bu1 - bu0), 2);
       rg.addColorStop(0, "rgba(" + rgb + "," + (.5 * ga).toFixed(3) + ")"); rg.addColorStop(.4, "rgba(" + rgb + "," + (.22 * ga).toFixed(3) + ")"); rg.addColorStop(1, "rgba(" + rgb + ",0)");
       hc.fillStyle = rg; hc.fillRect(0, 0, W2, H2);
       hc.globalCompositeOperation = "destination-in";                  // it fades out towards the lower edge, where the wheel's plate takes over
@@ -624,10 +624,10 @@ window.__afterIntro = (function () {
     }
     ctx.globalCompositeOperation = "destination-out";                 // the disc is in front of the lamp: nothing shines over it
     ctx.fillStyle = "#000";
-    var hx = cx + hole.x * scale, hy = H2 + hole.y * scale, hg = ctx.createRadialGradient(hx, hy, Math.max(0, hole.r - 9) * scale, hx, hy, (hole.r - 1) * scale);
+    var hx = cx + hole.x * scale, hy = H2 + hole.y * scale, hg = ctx.createRadialGradient(hx, hy, Math.max(0, hole.r - 9) * scale, hx, hy, Math.max(.5, hole.r - 1) * scale);   // radii must never be negative (hole.r is 0 before the first layout)
     hg.addColorStop(0, "rgba(0,0,0,1)"); hg.addColorStop(1, "rgba(0,0,0,0)");   // the light wraps over the dark ring a little: no black gap round the glass
     ctx.fillStyle = hg;
-    ctx.beginPath(); ctx.arc(hx, hy, (hole.r - 1) * scale, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx, hy, Math.max(.5, hole.r - 1) * scale, 0, 6.2832); ctx.fill();
     ctx.globalCompositeOperation = "source-over";
   }
 
