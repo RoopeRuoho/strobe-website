@@ -767,7 +767,7 @@ window.__afterIntro = (function () {
   box.addEventListener("pointercancel", endDrag);
   playBtn.addEventListener("click", function (ev) {
     var now = Date.now();
-    clicks = now - lastClick < 450 ? clicks + 1 : 1; lastClick = now;
+    clicks = now - lastClick < 700 ? clicks + 1 : 1; lastClick = now;     // 700 ms: three taps on a phone take longer than three clicks
     if (clicks === 3) { clicks = 0; toggleEnc(); return; }           // triple click: show or hide the speed encoder (the first two clicks cancel each other out)
     setPlaying(!playing);
   });
