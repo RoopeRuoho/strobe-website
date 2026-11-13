@@ -23,7 +23,7 @@ window.SITE = {
     ],
     more: "More about me",
     stats: [
-      { value: "{years:2022}", label: "Years on the road" },
+      { value: "{years:2021}", label: "Years on the road" },
       { value: "300+", label: "Shows delivered" },
       { value: "200+", label: "Venues & festivals" }
     ]
@@ -36,7 +36,7 @@ window.SITE = {
     lead: "Lighting designer, operator and technician based in Finland.",
     portrait: { image: "img/about-portrait.jpg", alt: "Black and white portrait of Roope, smiling with arms crossed, wearing a beanie and a leather jacket on a balcony by the water." },
     story: [
-      "I hit the road in 2022 as a full-time professional, and I have been designing, programming and rigging light ever since. [Tell your story here.]",
+      "I hit the road in 2021 as a full-time professional, and I have been designing, programming and rigging light ever since. [Tell your story here.]",
       "I like being involved from the first sketch to the last load-out, because the best shows are the ones where nothing gets lost in between. [Replace with your own text.]",
       "When I'm not working I'm testing fixtures, building cue lists in the visualiser or looking for the next venue with a good rig. [Replace with your own text.]"
     ],
@@ -48,7 +48,7 @@ window.SITE = {
     ],
     timelineTitle: "On the road",
     timeline: [
-      { year: "2022", text: "Started on the road as a full-time professional lighting technician. [Replace]" },
+      { year: "2021", text: "Started on the road as a full-time professional lighting technician. [Replace]" },
       { year: "2023", text: "First festival season. [Replace]" },
       { year: "2024", text: "Arena tour support and club residency. [Replace]" },
       { year: "Now", text: "Designing, operating and renting out gear. [Replace]" }
