@@ -1,1 +1,9 @@
 .DS_Store
+# private notes and the admin preview: kept on this computer only, never published
+CLAUDE.md
+BRIEF.md
+README.md
+admin.html
+admin.css
+admin.js
+.claude/
