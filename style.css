@@ -663,7 +663,7 @@ html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro
 .tc-sad .tc-f rect { fill: #ff2b2b; }
 
 /* Easter eggs on touch screens: no double-tap zoom or text selection when tapping the clocks or the wheel buttons three times in a row */
-.stat-value.tc, .gobo-btn, .gobo-bar button, .fader, .gate-lamp { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.stat-value.tc, .gobo-btn, .gobo-bar button, .fader { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .stat-value.tc { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: default; }
 
 /* Phones: the three clocks sit one under the other (three across would run off the screen) */

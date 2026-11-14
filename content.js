@@ -178,7 +178,9 @@ window.SITE = {
   // The first screen shown on every page until the secret word is typed (see gate.js)
   gate: {
     title: "Under construction",
-    text: "The new Strobe Corp site is being built. Back soon."
+    text: "The new Strobe Corp site is being built. Back soon.",
+    button: "Understood, enter",
+    note: "Must wear a hard hat on a construction site."
   },
 
   footer: "© Strobe Corp. All rights reserved."
