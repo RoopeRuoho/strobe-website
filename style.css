@@ -461,10 +461,8 @@ html.hero-live .hero-title .ch {
   color: var(--muted); background: transparent; border: 1px dashed var(--muted); border-radius: 2px; cursor: pointer;
 }
 .replay-temp:hover { color: var(--text); border-color: var(--text); }
-a.admin-temp { display: inline-flex; align-items: center; text-decoration: none; margin: 0 auto 0 var(--s2); }
 @media (max-width: 1100px) {
   .replay-temp { position: fixed; left: 8px; bottom: 8px; z-index: 90; margin: 0; background: rgba(5, 5, 5, .82); }
-  a.admin-temp { bottom: 60px; margin: 0; }
 }
 html.intro-pending .replay-temp { display: none; }
 
