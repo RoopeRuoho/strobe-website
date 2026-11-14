@@ -14,11 +14,12 @@
     if (item.href === "gear.html") a.setAttribute("aria-current", "page");
     $("nav").appendChild(a);
   });
+  if (window.langButton) { $("nav").appendChild(window.langButton()); window.paintLangButtons(); }
   $("gear-cue").textContent = G.cue;
   $("gear-title").textContent = G.title;
   $("gear-text").textContent = G.text;
   var mail = "";
-  S.contact.rows.forEach(function (r) { if (r.label === "Email") mail = r.value; });
+  S.contact.rows.forEach(function (r) { if (r.href && r.href.indexOf("mailto:") === 0) mail = r.value; });   // found by its link, so the label can be in any language
   G.items.forEach(function (g) {
     var li = el("li", "gear-card");
     var fig = el("div", "gear-media" + (g.fit === "contain" ? " contain" : ""));   // fit: "contain" shows a product shot whole instead of cropped

@@ -567,16 +567,17 @@ html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro
 }
 .fixture.lens-on .lbl text { opacity: .9; }
 
-.intro-skip, .intro-enter {
+.intro-skip, .intro-lang, .intro-enter {
   position: fixed; pointer-events: auto; cursor: pointer; border-radius: 2px;
   font: 600 .9rem/1 var(--font-label); letter-spacing: .2em; text-transform: uppercase;
 }
-.intro-skip {
+.intro-skip, .intro-lang {
   top: 12px; right: 12px; min-height: 44px; padding: 0 12px; font-size: .8rem; letter-spacing: .16em;
   background: rgba(5,5,5,.6); color: var(--muted); border: 1px solid var(--line);
   transition: color .2s, border-color .2s;
 }
-.intro-skip:hover { color: var(--text); border-color: var(--muted); }
+.intro-lang { right: auto; left: 12px; }
+.intro-skip:hover, .intro-lang:hover { color: var(--text); border-color: var(--muted); }
 .intro-enter {
   left: 50%; bottom: 12vh; min-height: 48px; padding: 0 var(--s5); white-space: nowrap;
   background: var(--accent); color: #000; border: 0; font-size: 1rem; letter-spacing: .16em;
@@ -668,4 +669,20 @@ html.intro-lite .intro-glow, html.intro-lite .intro-beam, html.intro-lite .intro
 @media (max-width: 599px) {
   .stats { grid-template-columns: 1fr; }
   .stat-value.tc { font-size: 40px; }
+}
+
+/* Language button: the header (after the menu links) and the intro corner */
+#nav .lang-btn {
+  font: 600 .85rem/1 var(--font-label); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  background: transparent; border: 1px solid var(--line-2, var(--line)); border-radius: 2px; cursor: pointer;
+  min-height: 36px; align-self: center; padding: 0 10px; margin-left: var(--s2);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color .2s, border-color .2s;
+}
+#nav .lang-btn:hover { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 520px) { #nav .lang-btn { margin-left: 0; padding: 0 8px; } }
+
+/* Small phones: the menu (with the language button) has to fit on one line, in Finnish too */
+@media (max-width: 420px) {
+  #nav a { font-size: .82rem; letter-spacing: .07em; padding-left: 2px; padding-right: 2px; }
+  #nav .lang-btn { font-size: .78rem; padding: 0 6px; min-height: 32px; }
 }

@@ -46,6 +46,7 @@ window.__afterIntro = (function () {
     a.href = item.href || "#" + item.id;
     nav.appendChild(a);
   });
+  if (window.langButton) { nav.appendChild(window.langButton()); window.paintLangButtons(); }
   // The hero title is built from letters so they can light up one by one like a cue (see .ch in style.css).
   var ht = $("hero-title"), idx = 0;
   var oAt = S.brand.replace(/\s/g, "").toLowerCase().indexOf("o");      // the first "o": the intro dive lands on it
@@ -92,7 +93,7 @@ window.__afterIntro = (function () {
   setText("work-cue", S.work.cue);
   setText("work-title", S.work.title);
   S.work.filters.forEach(function (f, i) {
-    var b = el("button", "filter", f);
+    var b = el("button", "filter", ((S.work.labels || {})[f]) || f);
     b.type = "button";
     b.dataset.filter = f;
     b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
@@ -111,7 +112,7 @@ window.__afterIntro = (function () {
     window.__afterIntro(function () { img.src = p.image; });
     fig.appendChild(img);
     var body = el("div", "card-body");
-    body.appendChild(el("p", "card-tag", p.category));
+    body.appendChild(el("p", "card-tag", ((S.work.labels || {})[p.category]) || p.category));
     body.appendChild(el("h3", "card-title", p.title));
     body.appendChild(el("p", "card-meta", p.venue + " · " + p.date));
     body.appendChild(el("p", "card-role", p.role));
@@ -119,7 +120,7 @@ window.__afterIntro = (function () {
     var btn = el("button", "card-btn");
     btn.type = "button";
     btn.setAttribute("aria-haspopup", "dialog");
-    btn.setAttribute("aria-label", "Open " + p.title + ", " + p.venue);
+    btn.setAttribute("aria-label", ((S.work.gobo || {}).open || "Open") + " " + p.title + ", " + p.venue);
     btn.appendChild(fig);
     btn.appendChild(body);
     li.appendChild(btn);
@@ -224,7 +225,7 @@ window.__afterIntro = (function () {
         setTimeout(function () { if (card.classList.contains("is-out")) card.hidden = true; }, 260);
       }
     });
-    if (status && S.work.status) status.textContent = S.work.status.replace("{n}", shown).replace("{filter}", f === "All" ? "" : f.toLowerCase()).replace("  ", " ");
+    if (status && S.work.status) status.textContent = (f === "All" && S.work.statusAll ? S.work.statusAll : S.work.status).replace("{n}", shown).replace("{filter}", f === "All" ? "" : (((S.work.labels || {})[f]) || f).toLowerCase()).replace("  ", " ");
   }
   filtersEl.addEventListener("click", function (ev) {
     var b = ev.target.closest(".filter");
@@ -248,7 +249,7 @@ window.__afterIntro = (function () {
     els.img.classList.remove("in");
     els.img.src = p.image;
     els.img.alt = p.alt;
-    els.cat.textContent = p.category;
+    els.cat.textContent = ((S.work.labels || {})[p.category]) || p.category;
     els.title.textContent = p.title;
     els.meta.innerHTML = "";
     [[T.venue || "Venue", p.venue], [T.date || "Date", p.date], [T.role || "Role", p.role]].forEach(function (row) {
@@ -509,7 +510,7 @@ window.__afterIntro = (function () {
       if (activeI >= 0) discs[activeI].classList.remove("is-on");
       activeI = bi; discs[bi].classList.add("is-on");
       var p = P[bi % P.length];
-      capEl.textContent = p.title + " · " + p.category;
+      capEl.textContent = p.title + " · " + (((S.work.labels || {})[p.category]) || p.category);
       project(p);
     }
   }
@@ -845,7 +846,6 @@ window.__afterIntro = (function () {
   var vignette = $("introVignette"), lastAmb = -1, trussAmb = $("trussAmb"), lensLight = $("lensLight"), fxTruss = $("fxTruss"), maskBeams2 = $("maskBeams2"), fxDark = $("fxDark"), fxDefs = $("fxDefs"), maskBeams = $("maskBeams"), beamSvg = $("introBeam"), beamDefs = $("beamDefs");
   var aim = { x: 0, y: 0 };           // smoothed head aim toward the cursor, -1..1
   var enter = $("introEnter"), skip = $("introSkip"), nav = $("nav");
-  var KEY = "strobe-intro-seen";
   var PUSH_MS = 3300, SKIP_MS = 450, IDLE_MS = 4000;
 
   /* ---------- tiny wireframe 3D engine (orthographic, painter's algorithm) ---------- */
@@ -1547,13 +1547,14 @@ window.__afterIntro = (function () {
     skip.style.transition = "opacity .35s ease";
     skip.style.opacity = 0;
     skip.style.pointerEvents = "none";
+    var il = $("introLang");
+    if (il) { il.style.transition = "opacity .35s ease"; il.style.opacity = 0; il.style.pointerEvents = "none"; }
     enter.blur();
   }
 
   function finish() {
     done = true;
     cancelAnimationFrame(raf);
-    try { sessionStorage.setItem(KEY, "1"); } catch (err) {}
     var focusInIntro = box.contains(document.activeElement);
     stage.style.transform = "";
     stage.style.transformOrigin = "";
@@ -1649,7 +1650,7 @@ window.__afterIntro = (function () {
     sp.hit.addEventListener("click", function () {
       sp.on = !sp.on;
       sp.hit.setAttribute("aria-pressed", sp.on ? "true" : "false");
-      sp.hit.setAttribute("aria-label", "Switch the " + names[i] + " spot " + (sp.on ? "off" : "on"));
+      sp.hit.setAttribute("aria-label", ((window.SITE.ui || {})[sp.on ? "spotOff" : "spotOn"] || "Switch the {name} spot " + (sp.on ? "off" : "on")).replace("{name}", ((window.SITE.ui || {}).spotNames || {})[names[i]] || names[i]));
       lastInput = performance.now();
     });
   });

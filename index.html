@@ -20,10 +20,10 @@
   <script>
     /* Intro gate: runs before first paint so the page never flashes before the blackout. */
     (function () {
-      var d = document.documentElement, seen = false, rm = false;
+      // The intro plays on every visit to the home page (only skipped for visitors who asked for reduced motion).
+      var d = document.documentElement, rm = false;
       try { rm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-      try { seen = sessionStorage.getItem("strobe-intro-seen") === "1"; } catch (e) {}
-      if (!rm && !seen) {
+      if (!rm) {
         d.classList.add("intro-pending");
         // Safety net: if script.js never starts the intro, show the page anyway.
         setTimeout(function () { if (!window.__introStarted) d.classList.remove("intro-pending"); }, 3000);
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n="ui.skipLink">Skip to content</a>
 
   <!-- Intro: moving head fixture, beam and pool of light. Hidden unless html.intro-pending. -->
   <div class="intro" id="intro">
@@ -89,12 +89,13 @@
 
     <div class="intro-vignette" id="introVignette" aria-hidden="true"></div>
 
-    <button class="spot-hit" id="spotC" type="button" aria-pressed="true" aria-label="Switch the centre spot off"></button>
-    <button class="spot-hit" id="spotL" type="button" aria-pressed="false" aria-label="Switch on the left spot"></button>
-    <button class="spot-hit" id="spotR" type="button" aria-pressed="false" aria-label="Switch on the right spot"></button>
+    <button class="spot-hit" id="spotC" type="button" aria-pressed="true" aria-label="Switch the centre spot off" data-i18n-aria="ui.spotCentreOff"></button>
+    <button class="spot-hit" id="spotL" type="button" aria-pressed="false" aria-label="Switch on the left spot" data-i18n-aria="ui.spotLeftOn"></button>
+    <button class="spot-hit" id="spotR" type="button" aria-pressed="false" aria-label="Switch on the right spot" data-i18n-aria="ui.spotRightOn"></button>
 
-    <button class="intro-skip" id="introSkip" type="button">Skip intro</button>
-    <button class="intro-enter" id="introEnter" type="button">Enter the light</button>
+    <button class="intro-lang" id="introLang" type="button" data-lang-switch>FI</button>
+    <button class="intro-skip" id="introSkip" type="button" data-i18n="ui.introSkip">Skip intro</button>
+    <button class="intro-enter" id="introEnter" type="button" data-i18n="ui.introEnter">Enter the light</button>
   </div>
 
   <div id="stage">
@@ -102,16 +103,16 @@
     <a class="logo" href="#hero" id="logo"></a>
     <!-- TEMP: dev helper to replay the intro. Remove this button, its CSS (.replay-temp) and its handler in script.js before launch. -->
     <button class="replay-temp" id="replayTemp" type="button">Replay intro</button>
-    <nav aria-label="Main" id="nav"></nav>
+    <nav aria-label="Main" id="nav" data-i18n-aria="ui.navAria"></nav>
   </header>
 
   <main id="main" tabindex="-1">
     <section id="hero" class="hero" aria-labelledby="hero-title">
-      <p class="cue">CUE 0 / HOUSE LIGHTS</p>
+      <p class="cue" data-i18n="ui.heroCue">CUE 0 / HOUSE LIGHTS</p>
       <h1 id="hero-title" class="hero-title"></h1>
       <p class="hero-role" id="hero-role"></p>
       <p class="hero-tagline" id="hero-tagline"></p>
-      <a class="btn" href="#work">See the work</a>
+      <a class="btn" href="#work" data-i18n="ui.seeWork">See the work</a>
     </section>
 
     <section id="about" class="section" aria-labelledby="about-title">
@@ -142,12 +143,12 @@
           <button type="button" class="gobo-btn" id="goboNext"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
         <div class="gobo-enc" id="goboEnc" hidden>
-          <span class="gobo-enc-k">Speed</span>
-          <div class="enc" id="goboKnob" role="slider" tabindex="0" aria-label="Wheel speed" aria-valuemin="1" aria-valuemax="12" aria-valuenow="5"><i></i></div>
+          <span class="gobo-enc-k" data-i18n="ui.speed">Speed</span>
+          <div class="enc" id="goboKnob" role="slider" tabindex="0" aria-label="Wheel speed" data-i18n-aria="ui.wheelSpeed" aria-valuemin="1" aria-valuemax="12" aria-valuenow="5"><i></i></div>
           <output class="gobo-enc-v" id="goboEncV">4.2</output>
         </div>
       </div>
-      <div class="filters" id="work-filters" role="group" aria-label="Filter projects"></div>
+      <div class="filters" id="work-filters" role="group" aria-label="Filter projects" data-i18n-aria="ui.filterAria"></div>
       <p class="sr-only" id="work-status" role="status" aria-live="polite"></p>
       <ul class="grid" id="work-grid"></ul>
     </section>
@@ -164,8 +165,8 @@
       <h2 id="contact-title"></h2>
       <p class="prose" id="contact-text"></p>
       <table class="patch" id="contact-table">
-        <caption class="sr-only">Contact details</caption>
-        <thead><tr><th scope="col">Ch</th><th scope="col">Label</th><th scope="col">Value</th></tr></thead>
+        <caption class="sr-only" data-i18n="ui.contactCaption">Contact details</caption>
+        <thead><tr><th scope="col" data-i18n="ui.thCh">Ch</th><th scope="col" data-i18n="ui.thLabel">Label</th><th scope="col" data-i18n="ui.thValue">Value</th></tr></thead>
         <tbody></tbody>
       </table>
       <a class="btn" id="contact-btn" href="#contact"></a>
@@ -175,7 +176,7 @@
       <p class="cue" id="gel-cue"></p>
       <h2 id="gel-title"></h2>
       <p class="prose" id="gel-text"></p>
-      <div class="swatches" id="gel-swatches" role="group" aria-label="Accent colour"></div>
+      <div class="swatches" id="gel-swatches" role="group" aria-label="Accent colour" data-i18n-aria="ui.accentAria"></div>
       <p class="gel-name" id="gel-name" role="status" aria-live="polite"></p>
     </section>
 

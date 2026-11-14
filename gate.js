@@ -35,6 +35,9 @@
     ".gate-btn:focus-visible{outline:2px solid #fff;outline-offset:4px}" +
     ".gate-btn svg{width:26px;height:26px;flex:none;fill:currentColor}" +
     ".gate.ok .gate-lamp{animation:none;opacity:1;transform:scale(1.6);transition:transform .5s ease;box-shadow:0 0 120px 40px rgba(255,179,71,.6)}" +
+    ".gate-lang{position:absolute;top:14px;right:14px;z-index:2;min-height:40px;padding:0 12px;background:rgba(5,5,5,.6);color:#9a9aa2;border:1px solid rgba(255,255,255,.14);border-radius:2px;" +
+      "font:600 .85rem/1 'Barlow Condensed',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;touch-action:manipulation}" +
+    ".gate-lang:hover{color:#f3f1ec;border-color:#9a9aa2}" +
     ".gate-btn-w{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}" +
     ".gate-note{font:500 .66rem/1.2 'Barlow Condensed',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(0,0,0,.62)}" +
     "@media (prefers-reduced-motion:reduce){.gate::before,.gate-beam,.gate-lamp{animation:none}}";
@@ -53,6 +56,7 @@
     g.className = "gate"; g.setAttribute("role", "main");
     g.innerHTML = '<div class="gate-beam b2" aria-hidden="true"></div><div class="gate-beam b3" aria-hidden="true"></div>' +
       '<div class="gate-lamp" aria-hidden="true"></div>' +
+      '<button type="button" class="gate-lang" data-lang-switch></button>' +
       '<h1 class="gate-brand"></h1><p class="gate-title"></p><p class="gate-text"></p>' +
       '<button type="button" class="gate-btn">' + HAT + '<span class="gate-btn-w"><span class="gate-btn-t"></span><small class="gate-note"></small></span>' + HAT + '</button>';
     g.querySelector(".gate-brand").textContent = brand;
@@ -61,6 +65,7 @@
     g.querySelector(".gate-btn-t").textContent = G.button || "Understood, enter";
     g.querySelector(".gate-note").textContent = G.note || "";
     document.body.appendChild(g);
+    if (window.paintLangButtons) window.paintLangButtons();
     document.title = (G.title || "Under construction") + " | " + brand;
 
     var btn = g.querySelector(".gate-btn"), done = false;

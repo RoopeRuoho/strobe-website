@@ -14,6 +14,7 @@
     if (item.href === "about.html") a.setAttribute("aria-current", "page");
     $("nav").appendChild(a);
   });
+  if (window.langButton) { $("nav").appendChild(window.langButton()); window.paintLangButtons(); }
 
   $("ap-eyebrow").textContent = A.eyebrow;
   $("ap-title").textContent = A.title;
@@ -36,7 +37,7 @@
   $("ap-tl-title").textContent = A.timelineTitle;
   A.timeline.forEach(function (t) {
     var li = el("li", "tl-item");
-    li.appendChild(el("span", "tl-year", t.year)); li.appendChild(el("p", null, t.text));
+    li.appendChild(el("span", "tl-year", t.year)); if (t.text) li.appendChild(el("p", null, t.text));   // years only until the text is written
     $("ap-tl").appendChild(li);
   });
   var cta = $("ap-cta"); cta.textContent = A.cta; cta.href = A.ctaHref || "index.html#contact";
