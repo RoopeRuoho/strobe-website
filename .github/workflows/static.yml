@@ -33,11 +33,19 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Collect the public site files
+        # Only the pages, their scripts and styles and the images are published. Notes (README, BRIEF, CLAUDE),
+        # the admin preview and the workflow itself stay in the repository but are not put on the website.
+        run: |
+          mkdir _site
+          cp -R img _site/
+          for f in *.html *.js *.css; do
+            case "$f" in admin.*) ;; *) cp "$f" _site/ ;; esac
+          done
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
