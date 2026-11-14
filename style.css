@@ -279,8 +279,6 @@ h2 {
   :root { --gutter: 48px; --header-h: 64px; }
   .logo { font-size: 1.1rem; }
   .grid { grid-template-columns: repeat(3, 1fr); }
-  .about-grid { grid-template-columns: 1.4fr 1fr; align-items: start; }
-  .stats { grid-template-columns: 1fr; }
   #nav { gap: var(--s5); }
 }
 @media (max-width: 380px) {
@@ -442,7 +440,7 @@ html.hero-live .hero-title .ch {
 .ap-grid { display: grid; gap: var(--s6); grid-template-columns: 1fr; align-items: start; }
 .ap-portrait { margin: 0; aspect-ratio: 4 / 5; max-width: 420px; overflow: hidden; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); }
 .ap-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 38% 50%; display: block; }
-.ap-story .stats { margin-top: var(--s5); max-width: 560px; }
+.ap-story .stats { margin-top: var(--s5); max-width: 760px; }
 .do-grid { display: grid; gap: var(--s4); grid-template-columns: 1fr; }
 .do-card { padding: var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: 2px; display: grid; gap: var(--s2); transition: border-color .3s ease; }
 .do-card:hover { border-color: var(--accent); }

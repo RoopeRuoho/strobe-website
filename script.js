@@ -1444,7 +1444,7 @@ window.__afterIntro = (function () {
     var faceMax = 0, dtr = Math.min(.1, Math.max(0, (tNow - lastBT) / 1000));
     lastBT = tNow;
     for (var bi = 0; bi < 3; bi++) {
-      var bl = SPOTS[bi].lens, h1 = Math.hypot(bl.e1[0], bl.e1[1]), h2 = Math.hypot(bl.e2[0], bl.e2[1]), brad = Math.max(h1, h2) * 3.4;
+      var bl = SPOTS[bi].lens, h1 = Math.hypot(bl.e1[0], bl.e1[1]), h2 = Math.hypot(bl.e2[0], bl.e2[1]), brad = Math.max(h1, h2) * (3.4 + 7.6 * flare);   // while dazzling the glare around every light swells
       // how squarely this head faces the camera: the lens circle's minor/major axis ratio is the cosine of the angle off-axis
       var face = lensOn ? cl((Math.min(h1, h2) / Math.max(h1, h2, 1) - .93) / .06) : 0;
       // with the mouse, the glow only appears when the cursor is actually pointing at this lens
@@ -1461,7 +1461,7 @@ window.__afterIntro = (function () {
     }
 
     // a subtle glow in the lamp colour along the screen edges while the spots dazzle, fading as the dive begins
-    vignette.style.opacity = (Math.max(flare, faceMax * .8) * .55 * (1 - cl(e * 1.3))).toFixed(3);
+    vignette.style.opacity = "0";   // the glare is now around each light (the blooms above), no longer a wash along the screen edges
 
     // The truss is faintly visible while any light is on, and fully in the dark once every spot is off.
     var anyOn = Math.max(easeInOut(SPOTS[0].p), easeInOut(SPOTS[1].p), easeInOut(SPOTS[2].p));

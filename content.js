@@ -19,7 +19,7 @@ window.SITE = {
     paragraphs: [
       "I'm a lighting designer, operator and technician based in Finland. I draw the look on paper, programme it on the desk and rig the fixtures myself, so nothing gets lost between the idea and the show.",
       "From small club nights to festival stages, I care about the same things: clean cues, a calm rig and light that supports the music instead of fighting it.",
-      "Off the clock I'm the one still re-focusing a fixture after the crowd has gone home."
+      "Even off the clock, you'll usually find me refining a design or tidying up a cue list."
     ],
     more: "More about me",
     stats: [
